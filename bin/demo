@@ -1,0 +1,72 @@
+#!/usr/bin/env node
+
+var error_handler = require('../lib/error-handler'),
+	OverpassProvider = require('../lib/geometry/overpass-provider'),
+	ColladaWriter = require('../lib/writers/collada-writer'),
+	StlWriter = require('../lib/writers/stl-writer'),
+	GeometryManager = require('../lib/geometry-manager'),
+	Tile = require('../lib/osm/tile'),
+	_ = require('lodash');
+
+// Death Valley - Very Low Zoom
+//var tile = new Tile(7, 22, 49),
+// Detroit - High Zoom
+//var tile = new Tile(11, 551, 757),
+// Detroit - Low Zoom
+//var tile = new Tile(9, 137, 189),
+// Grand Canyon - Low Zoom
+//var tile = new Tile(9, 96, 200),
+// Rockies - Low Zoom
+//var tile = new Tile(9, 105, 193),
+// Mount Everest - Low Zoom
+//var tile = new Tile(9, 379, 214),
+//	manager,
+//	provider;
+
+var sample_tiles = [
+	{
+		'name': 'Death Valley - Very Low Zoom',
+		'tile': new Tile(7, 22, 49)
+	}, {
+		'name': 'Detroit - High Zoom',
+		'tile': new Tile(11, 551, 757)
+	}, {
+		'name': 'Detroit - Low Zoom',
+		'tile': new Tile(9, 137, 189)
+	}, {
+		'name': 'Grand Canyon - Low Zoom',
+		'tile': new Tile(9, 96, 200)
+	}, {
+		'name': 'Rockies - Low Zoom',
+		'tile': new Tile(9, 105, 193)
+	}, {
+		'name': 'Mount Everest - Low Zoom',
+		'tile': new Tile(9, 379, 214)
+	}
+];
+
+_.each(sample_tiles, function (sample) {
+	var filename = sample.name.toLowerCase().replace(/[ \-]+/g, '-'),
+		provider = new OverpassProvider(sample.tile.geo_bounds),
+		manager = new GeometryManager(sample.tile);
+
+	console.log('Building geometry for tile ' + sample.name);
+
+	manager.add_geometry(provider);
+
+	manager.get_triangles()
+		.then(function (triangulator) {
+			var writer = new StlWriter('demo/' + filename + '.stl');
+
+			writer.matrix.multiply(sample.tile.matrix());
+
+			writer.add(triangulator);
+
+			writer.finish()
+				.then(function () {
+					console.log('File written');
+				}, error_handler('writing file'));
+
+		}, error_handler('getting triangles'))
+		.catch(error_handler('preparing triangle writer'));
+});

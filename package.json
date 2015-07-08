@@ -1,0 +1,19 @@
+{
+  "name": "osm-topo",
+  "version": "0.0.1",
+  "description": "",
+  "main": "tiles.js",
+  "dependencies": {
+    "commander": "^2.8.1",
+    "lodash": "^3.10.0",
+    "request": "^2.57.0"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+	<library_visual_scenes>
+		<visual_scene id="<%= visual_scene_id %>">
+			<% _.each(triangulators, function (tri) { %>
+				<node>
+					<matrix sid="transform"><%= join(matrix.mat) %></matrix>
+					<instance_geometry url="#<%= tri.geometry_id %>"></instance_geometry>
+				</node>
+			<% }) %>
+		</visual_scene>
+	</library_visual_scenes>
+
+	<library_geometries>
+		<% _.each(triangulators, function (tri) { %>
+			<geometry id="<%= tri.geometry_id %>">
+				<mesh>
+					<source id="<%= tri.geometry_id %>_SOURCE">
+						<float_array id="<%= tri.geometry_id %>_SOURCE_ARRAY" count="<%= tri.verticies.length * 3 %>">
+							<%= flatten_points(tri.verticies) %>
+						</float_array>
+						<technique_common>
+							<accessor count="<%= tri.verticies.length %>" stride="3" source="#<%= tri.geometry_id %>_SOURCE_ARRAY">
+								<param name="X" type="float" />
+								<param name="Y" type="float" />
+								<param name="Z" type="float" />
+							</accessor>
+						</technique_common>
+					</source>
+					<vertices id="<%= tri.vertex_id %>">
+						<input semantic="POSITION" source="#<%= tri.geometry_id %>_SOURCE" />
+					</vertices>
+					<triangles count="<%= tri.triangles.length %>">
+						<input offset="0" semantic="VERTEX" source="#<%= tri.vertex_id %>" />
+						<p><%= flatten_triangles(tri.triangles) %></p>
+					</triangles>
+				</mesh>
+			</geometry>
+		<% }) %>
+	</library_geometries>
+
+	<scene>
+		<instance_visual_scene url="#<%= visual_scene_id %>" />
+	</scene>
+</COLLADA>

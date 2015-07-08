@@ -1,0 +1,55 @@
+#!/usr/bin/env node
+
+var program = require('commander'),
+	error_handler = require('../lib/error-handler'),
+	OverpassProvider = require('../lib/geometry/overpass-provider'),
+	ColladaWriter = require('../lib/writers/collada-writer'),
+	StlWriter = require('../lib/writers/stl-writer'),
+	GeometryManager = require('../lib/geometry-manager'),
+	Tile = require('../lib/osm/tile');
+
+program
+	.description('build the geometry for a single tile')
+	.parse(process.argv);
+
+function uint_param(program, idx, name) {
+	var value = parseInt(program.args[idx], 10);
+
+	if (isNaN(value)) {
+		throw 'The ' + name + ' parameter should be an integer.';
+	} else if (value < 0) {
+		throw name + ' parameter should be positive.';
+	}
+
+	return value;
+}
+
+var z = uint_param(program, 0, 'map zoom'),
+	x = uint_param(program, 1, 'tile x coordinant'),
+	y = uint_param(program, 2, 'tile y coordinant');
+
+console.log('Preparing tile ' + z + ', ' + x + ', ' + y);
+
+var	tile = new Tile(z, x, y),
+	provider = new OverpassProvider(tile.geo_bounds),
+	manager = new GeometryManager(tile);
+
+manager.add_geometry(provider);
+
+manager.get_triangles()
+	.then(function (triangulator) {
+		//var writer = new ColladaWriter('test.dae');
+		var writer = new StlWriter(z + '-' + x + '-' + y + '.stl');
+
+		writer.matrix.multiply(tile.matrix());
+
+		writer.add(triangulator);
+
+		writer.finish()
+			.then(function () {
+				console.log('File written');
+			}, error_handler('writing file'));
+
+	}, error_handler('getting triangles'))
+	.catch(error_handler('preparing triangle writer'));
+
