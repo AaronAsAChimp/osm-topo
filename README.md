@@ -2,7 +2,7 @@ osm-topo
 ========
 
 This is an application that will generate a 3D mesh of the earth given standard
-OSM tile coordinates (zoom, x, y);
+OSM tile coordinates (zoom, x, y).
 
 To use:
 
@@ -16,3 +16,6 @@ interesting places. The files will be generated into the `demos/` folder.
 ```sh
 $ bin/demo
 ```
+
+The data used by this application is retrieved using the Overpass API and
+is Copyright (C) [OpenStreetMap contributors](https://www.openstreetmap.org/copyright).

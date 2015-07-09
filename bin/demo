@@ -1,5 +1,24 @@
 #!/usr/bin/env node
 
+/*
+    osm-topo - 3D map generator
+    Copyright (C) 2015  Aaron Spaulding
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
+
 var error_handler = require('../lib/error-handler'),
 	OverpassProvider = require('../lib/geometry/overpass-provider'),
 	ColladaWriter = require('../lib/writers/collada-writer'),
@@ -7,21 +26,6 @@ var error_handler = require('../lib/error-handler'),
 	GeometryManager = require('../lib/geometry-manager'),
 	Tile = require('../lib/osm/tile'),
 	_ = require('lodash');
-
-// Death Valley - Very Low Zoom
-//var tile = new Tile(7, 22, 49),
-// Detroit - High Zoom
-//var tile = new Tile(11, 551, 757),
-// Detroit - Low Zoom
-//var tile = new Tile(9, 137, 189),
-// Grand Canyon - Low Zoom
-//var tile = new Tile(9, 96, 200),
-// Rockies - Low Zoom
-//var tile = new Tile(9, 105, 193),
-// Mount Everest - Low Zoom
-//var tile = new Tile(9, 379, 214),
-//	manager,
-//	provider;
 
 var sample_tiles = [
 	{
