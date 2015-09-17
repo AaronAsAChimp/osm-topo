@@ -1,76 +1,137 @@
 #!/usr/bin/env node
 
 /*
-    osm-topo - 3D map generator
-    Copyright (C) 2015  Aaron Spaulding
+	osm-topo - 3D map generator
+	Copyright (C) 2015  Aaron Spaulding
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+	You should have received a copy of the GNU General Public License along
+	with this program; if not, write to the Free Software Foundation, Inc.,
+	51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-var error_handler = require('../lib/error-handler'),
-	OverpassProvider = require('../lib/geometry/overpass-provider'),
-	ColladaWriter = require('../lib/writers/collada-writer'),
-	StlWriter = require('../lib/writers/stl-writer'),
-	GeometryManager = require('../lib/geometry-manager'),
-	Tile = require('../lib/osm/tile'),
-	_ = require('lodash');
+'use strict';
+
+var cluster = require('cluster'),
+	http = require('http'),
+	os = require('os'),
+	OverpassProvider = require('../lib/osm/providers/overpass').default;
 
 var sample_tiles = [
 	{
 		'name': 'Death Valley - Very Low Zoom',
-		'tile': new Tile(7, 22, 49)
+		'tile': [7, 22, 49]
 	}, {
 		'name': 'Detroit - High Zoom',
-		'tile': new Tile(11, 551, 757)
+		'tile': [11, 551, 757]
 	}, {
 		'name': 'Detroit - Low Zoom',
-		'tile': new Tile(9, 137, 189)
+		'tile': [9, 137, 189]
 	}, {
 		'name': 'Grand Canyon - Low Zoom',
-		'tile': new Tile(9, 96, 200)
+		'tile': [9, 96, 200]
 	}, {
 		'name': 'Rockies - Low Zoom',
-		'tile': new Tile(9, 105, 193)
+		'tile': [9, 105, 193]
 	}, {
 		'name': 'Mount Everest - Low Zoom',
-		'tile': new Tile(9, 379, 214)
+		'tile': [9, 379, 214]
+	}, {
+		'name': 'Hilo, Hawaii - Very Low Zoom',
+		'tile': [6, 4, 28]
 	}
 ];
 
-_.each(sample_tiles, function (sample) {
-	var filename = sample.name.toLowerCase().replace(/[ \-]+/g, '-'),
-		provider = new OverpassProvider(sample.tile.geo_bounds),
-		manager = new GeometryManager(sample.tile);
+if (cluster.isMaster) {
+	console.log(OverpassProvider.get_max_processes);
+	let cpus = Math.min(os.cpus().length, OverpassProvider.get_max_processes());
 
-	console.log('Building geometry for tile ' + sample.name);
+	function handle_message (worker, worker_index) {
+		return function (message) {
+			console.log('Worker ' + worker_index + ' said: ' + message);
 
-	manager.add_geometry(provider);
+			if (message == 'started' || message == 'done') {
 
-	manager.get_triangles()
-		.then(function (triangulator) {
-			var writer = new StlWriter('demo/' + filename + '.stl');
+				let next_tile = sample_tiles.shift();
 
-			writer.matrix.multiply(sample.tile.matrix());
+				// If we got something from the array send it to the worker.
+				if (next_tile) {
+					worker.send(next_tile);
+				} else {
+					// Otherwise the queue is empty so kill the worker.
+					worker.kill();
+				}
+			}
+		}
+	}
 
-			writer.add(triangulator);
+	// Fork workers.
+	for (var i = 0; i < cpus && sample_tiles.length > 0; i++) {
+		let worker = cluster.fork();
 
-			writer.finish()
-				.then(function () {
-					console.log('File written');
-				}, error_handler('writing file'));
+		worker.on('message', handle_message(worker, i));
+	}
 
-		}, error_handler('getting triangles'))
-		.catch(error_handler('preparing triangle writer'));
-});
+	cluster.on('exit', function(worker, code, signal) {
+		console.log('worker ' + worker.process.pid + ' died');
+	});
+
+	//console.log(cluster.workers);
+
+} else {
+	var error_handler = require('../lib/error-handler').default,
+		ColladaWriter = require('../lib/writers/collada-writer'),
+		StlWriter = require('../lib/writers/stl-writer'),
+		GeometryManager = require('../lib/geometry-manager').default,
+		Tile = require('../lib/osm/tile').default,
+		_ = require('lodash');
+
+	var provider = new OverpassProvider();
+
+	console.log('Worker joined');
+
+	cluster.worker.send('started');
+
+	cluster.worker.on('message', function (sample) {
+		console.log('Working on tile ' + sample.name);
+
+		let filename = sample.name.toLowerCase().replace(/[, \-]+/g, '-'),
+			tile = new Tile(sample.tile[0], sample.tile[1], sample.tile[2]),
+			manager = new GeometryManager(tile);
+
+		console.log('Building geometry for tile ' + sample.name);
+
+		manager.add_geometry(provider);
+
+		manager.get_triangles()
+			.then(function (triangulator) {
+				console.log('Creating writer');
+				var writer = new StlWriter('demo/' + filename + '.stl');
+
+				console.log('Building matrix for writer');
+				writer.matrix.multiply(tile.matrix());
+
+				console.log('Adding triangulator to writer');
+				writer.add(triangulator);
+
+				console.log('Finishing writing.');
+				writer.finish()
+					.then(function () {
+						console.log('File written');
+						cluster.worker.send('done');
+					}, error_handler(sample.name + ': writing file'));
+
+			}, error_handler(sample.name + ': getting triangles'))
+				.catch(error_handler(sample.name + ': preparing triangle writer'));
+
+	});
+}

@@ -17,15 +17,31 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-module.exports = function (wherror) {
+'use strict';
 
-	return function (err) {
-		console.log('Error: ' + wherror);
+var primitives = require('../../lib/geometry/primitives');
 
-		if (err.stack) {
-			console.log(err.stack);
-		} else {
-			console.log(err);
-		}
-	};
+const TEST_ZOOM = 6;
+
+exports['BoundingBox2D'] = {
+	'Coordinate conversion round trip': function (test) {
+
+		var bbox = new primitives.BoundingBox2D(),
+			result_bbox;
+
+		bbox.minimum.x = 1;
+		bbox.minimum.y = 2;
+		bbox.maximum.x = 3;
+		bbox.maximum.y = 4;
+
+		result_bbox = bbox.geo(TEST_ZOOM).tile(TEST_ZOOM);
+
+		test.strictEqual(bbox.minimum.x, result_bbox.minimum.x, 'The minimum X should be the same');
+		test.strictEqual(bbox.minimum.y, result_bbox.minimum.y, 'The minimum Y should be the same');
+
+		test.strictEqual(bbox.maximum.x, result_bbox.maximum.x, 'The maximum X should be the same');
+		test.strictEqual(bbox.maximum.y, result_bbox.maximum.y, 'The maximum Y should be the same');
+
+		test.done();
+	}
 };

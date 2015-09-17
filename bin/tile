@@ -20,12 +20,12 @@
 */
 
 var program = require('commander'),
-	error_handler = require('../lib/error-handler'),
-	OverpassProvider = require('../lib/geometry/overpass-provider'),
+	error_handler = require('../lib/error-handler').default,
+	OverpassProvider =  require('../lib/osm/providers/overpass').default,
 	ColladaWriter = require('../lib/writers/collada-writer'),
 	StlWriter = require('../lib/writers/stl-writer'),
-	GeometryManager = require('../lib/geometry-manager'),
-	Tile = require('../lib/osm/tile');
+	GeometryManager = require('../lib/geometry-manager').default,
+	Tile = require('../lib/osm/tile').default;
 
 program
 	.description('build the geometry for a single tile')

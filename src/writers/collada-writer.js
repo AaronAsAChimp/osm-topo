@@ -41,7 +41,7 @@ ColladaWriter.prototype.flatten_points = function (points) {
 		writer = this;
 
 	points.forEach(function (point) {
-		flat += writer.join(point.position);
+		flat += writer.join(point);
 	});
 
 	return flat;

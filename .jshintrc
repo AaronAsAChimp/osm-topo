@@ -2,7 +2,7 @@
 	"curly": true,
 	"eqeqeq": true,
 	"immed": true,
-	"latedef": true,
+	"latedef": "nofunc",
 	"newcap": true,
 	"noarg": true,
 	"noempty": true,
@@ -15,5 +15,6 @@
 	"devel": true,
 	"forin": true,
 	"indent": 1,
-	"node": true
+	"node": true,
+	"esnext": true
 }

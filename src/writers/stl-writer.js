@@ -28,7 +28,7 @@ function StlWriter(filename) {
 StlWriter.prototype = Object.create(TriangleWriter.prototype);
 
 StlWriter.prototype.calculate_vertex_offset = function (vert, component) {
-	var FLOAT_BYTES = 4,
+	const FLOAT_BYTES = 4,
 		COMPONENTS = 3,
 		NORMAL_OFFSET = FLOAT_BYTES * COMPONENTS;
 
@@ -63,7 +63,7 @@ StlWriter.prototype.write_content = function () {
 		var triangles = triangulator.triangles;
 
 		triangles.forEach(function (triangle) {
-			var vert, vertex, scratch = new Buffer(50);
+			var scratch = new Buffer(50);
 			
 			// Write normal, applications will ignore this anyway.
 			scratch.writeFloatLE(0, 0);
@@ -71,8 +71,8 @@ StlWriter.prototype.write_content = function () {
 			scratch.writeFloatLE(0, 8);
 
 			// Write the verticies
-			for (vert = 0; vert < 3; vert++) {
-				vertex = triangle.lookup(vert).transform(writer.matrix);
+			for (let vert = 0; vert < 3; vert++) {
+				let vertex = triangle.lookup(vert).transform(writer.matrix);
 
 				//console.log(vertex);
 

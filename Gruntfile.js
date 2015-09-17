@@ -26,28 +26,46 @@ module.exports = function(grunt) {
 		// Task configuration.
 		jshint: {
 			options: {
-				curly: true,
-				eqeqeq: true,
-				immed: true,
-				latedef: true,
-				newcap: true,
-				noarg: true,
-				sub: true,
-				undef: true,
-				unused: true,
-				boss: true,
-				eqnull: true,
-				globals: {}
+				'jshintrc': true
 			},
 			gruntfile: {
 				src: 'Gruntfile.js'
 			},
 			lib_test: {
-				src: ['lib/**/*.js', 'test/**/*.js']
+				src: ['src/**/*.js', 'test/**/*.js']
 			}
 		},
 		nodeunit: {
-			files: ['test/**/*_test.js']
+			files: ['test/**/*.test.js']
+		},
+		babel: {
+			options: {
+				'modules': 'commonStrict',
+				'whitelist': [
+					'es6.modules',
+					'es6.arrowFunctions',
+					//'minification.deadCodeElimination',
+					//'minification.constantFolding',
+					'strict'
+				],
+				'optional': [
+					'runtime'
+				]
+			},
+			dist: {
+				files: [
+					{
+						'cwd': 'src/',
+						'src': '**/*.js',
+						'dest': 'lib/',
+						'expand': true,
+						'filter': 'isFile'
+					}, {
+						'src': 'test.js',
+						'dest': 'test-es5.js'
+					}
+				]
+			}
 		},
 		watch: {
 			gruntfile: {
@@ -63,9 +81,13 @@ module.exports = function(grunt) {
 
 	// These plugins provide necessary tasks.
 	grunt.loadNpmTasks('grunt-contrib-jshint');
-	grunt.loadNpmTasks('grunt-contrib-jst');
+	grunt.loadNpmTasks('grunt-contrib-nodeunit');
+	grunt.loadNpmTasks('grunt-babel');
+
+	grunt.registerTask('quality', ['jshint', 'nodeunit']);
+	grunt.registerTask('build', ['babel']);
 
 	// Default task.
-	grunt.registerTask('default', ['jshint']);
+	grunt.registerTask('default', ['build', 'quality']);
 
 };

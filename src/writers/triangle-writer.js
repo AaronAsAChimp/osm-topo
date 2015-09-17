@@ -40,6 +40,7 @@ function TriangleWriter (filename) {
 		});
 	});
 
+	console.log('Writing header');
 	this.write_header();
 }
 
@@ -62,14 +63,21 @@ TriangleWriter.prototype.write_footer = function () {
 };
 
 TriangleWriter.prototype.add = function (triangulator) {
-	this.triangulators.push(this.map_triangles(triangulator));
+	if (triangulator) {
+		this.triangulators.push(this.map_triangles(triangulator));
+	} else {
+		throw new Error('Triangulator was not defined');
+	}
 };
 
-TriangleWriter.prototype.finish = function (filename) {
-
+TriangleWriter.prototype.finish = function () {
+	console.log('Writing content');
 	this.write_content();
 
+	console.log('Writing footer');
 	this.write_footer();
+
+	this.stream.end();
 
 	return this.promise;
 };

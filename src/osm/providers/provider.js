@@ -17,25 +17,25 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-var BoundingBox2D = require('../geometry/primitives').BoundingBox2D,
-	Matrix3D = require('../geometry/primitives').Matrix3D;
+'use strict';
 
-function Tile(zoom, x, y) {
-	this.zoom = 1 << zoom;
+export default
+class Provider {
 
-	this.tile_bounds = new BoundingBox2D();
-	this.tile_bounds.minimum.x = x;
-	this.tile_bounds.minimum.y = y;
-	this.tile_bounds.minimum.z = 0;
-	this.tile_bounds.maximum.x = x + 1;
-	this.tile_bounds.maximum.y = y + 1;
-	this.tile_bounds.maximum.z = 0;
+	get (bbox, limit) {
+		throw new Error('method not implemented');
+	}
 
-	this.geo_bounds = this.tile_bounds.geo(this.zoom);
+	// Provider::get_max_processes
+	// ---------------------------
+	// 
+	// Get the maximum number of processes that is allowed by this provider.
+	// 
+	// Some providers like Overpass only allow certain number of connections. By
+	// default, however, the geometry provider will allow an unlimited amount
+	// of connections.
+
+	static get_max_processes() {
+		return Infinity;
+	}
 }
-
-module.exports = Tile;
-
-Tile.prototype.matrix = function () {
-	return Matrix3D.translate(Math.floor(-this.tile_bounds.minimum.x), Math.floor(-this.tile_bounds.minimum.y), 0);
-};

@@ -17,16 +17,18 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-var LatLng2D = require('./primitives').LatLng2D;
+'use strict';
 
-function GeometryProvider(bbox) {
-	this.bbox = bbox;
+//var elements = require('./elements');
+import Element from './elements';
+
+export default
+class Catalog extends Map {
+	set (element) {
+		if (!(element instanceof Element)) {
+			throw new Error('Element must be an Node, Way or Relation');
+		}
+
+		super.set(element.id, element);
+	}
 }
-
-// A generator for the coordinates provided by this object.
-// yields primitives.LatLng2D
-GeometryProvider.prototype.get_coords = function () {
-	throw 'Not Implemented';
-};
-
-module.exports = GeometryProvider;
