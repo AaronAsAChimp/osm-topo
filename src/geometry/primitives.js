@@ -562,6 +562,13 @@ GeoBoundingBox2D.prototype.tile = function (zoom) {
 	return tile;
 };
 
+GeoBoundingBox2D.prototype.contains_point = function (point) {
+	return (point.lat >= this.minimum.lat
+		&& point.lat <= this.maximum.lat
+		&& point.lng >= this.minimum.lng
+		&& point.lng <= this.maximum.lng);
+};
+
 // GeoBoundingBox2D::to_overpass()
 // ------------------------
 // 

@@ -73,27 +73,38 @@ class GeometryManager {
 					for (let point of projector(geometry)) {
 						//console.log(point);
 
-						if (manager.triangulator.points.length < MAX_POINTS) {
-							let projected = point.tile(manager.tile.zoom);
-							//console.log('adding', point);
-							
-							if (manager.add_dupe(projected)) {
-								manager.triangulator.add(projected);
+						// check if the point is in the bounding box.
+						if (manager.tile.geo_bounds.contains_point(point)) {
 
-								if ((manager.triangulator.points.length % LOG_AFTER) === 0) {
-									let current = new Date(),
-										points = manager.triangulator.points.length;
+							// check if we;ve reached the max
+							if (manager.triangulator.points.length < MAX_POINTS) {
 
-									console.log('Points: ' + points + ', per second: ' + (LOG_AFTER / (current - start)));
+								let projected = point.tile(manager.tile.zoom);
+								//console.log('adding', point);
+								
+								// check if the point is a duplicate.
+								if (manager.add_dupe(projected)) {
+									manager.triangulator.add(projected);
 
-									start = current;
+									if ((manager.triangulator.points.length % LOG_AFTER) === 0) {
+										let current = new Date(),
+											points = manager.triangulator.points.length;
+
+										console.log('Points: ' + points + ', per second: ' + (LOG_AFTER / (current - start)));
+
+										start = current;
+									}
+								} else {
+									console.log('Skipping point because it is a duplicate.');
 								}
+
 							} else {
-								console.log('Skipping point because it is a duplicate.');
+								// Early exit if we are maxed out.
+								console.log('Skipping remaining points because the maximum of ' + MAX_POINTS + ' points were reached.')
+								break;
 							}
 						} else {
-							// Early exit if we are maxed out.
-							break;
+							console.log('Skipping point because its outside of the bounding box.');
 						}
 					}
 				}

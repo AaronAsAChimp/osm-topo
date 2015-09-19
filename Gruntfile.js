@@ -60,9 +60,6 @@ module.exports = function(grunt) {
 						'dest': 'lib/',
 						'expand': true,
 						'filter': 'isFile'
-					}, {
-						'src': 'test.js',
-						'dest': 'test-es5.js'
 					}
 				]
 			}

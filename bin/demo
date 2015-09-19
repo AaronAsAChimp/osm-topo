@@ -52,7 +52,7 @@ var sample_tiles = [
 ];
 
 if (cluster.isMaster) {
-	console.log(OverpassProvider.get_max_processes);
+
 	let cpus = Math.min(os.cpus().length, OverpassProvider.get_max_processes());
 
 	function handle_message (worker, worker_index) {
