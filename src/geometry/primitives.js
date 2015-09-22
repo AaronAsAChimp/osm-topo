@@ -279,34 +279,38 @@ class Matrix3D extends Matrix {
 		this[11] = a41 * b13 + a42 * b23 + a43 * b33 + a44 * b43;
 		this[15] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
 	}
+
+	// Factory methods
+
+	static scale (x, y, z) {
+		var mat = new Matrix3D();
+
+		mat[0] = x;
+		mat[5] = y;
+		mat[10] = z;
+		mat[15] = 1;
+
+		return mat;
+	};
+
+	static identity () {
+		return Matrix3D.scale(1, 1, 1);
+	};
+
+	static mirror_y () {
+		return Matrix3D.scale(1, -1, 1);
+	}
+
+	static translate (x, y, z) {
+		var mat = Matrix3D.identity();
+
+		mat[3] = x;
+		mat[7] = y;
+		mat[11] = z;
+
+		return mat;
+	};
 }
-
-// Factory methods
-
-Matrix3D.scale = function (x, y, z) {
-	var mat = new Matrix3D();
-
-	mat[0] = x;
-	mat[5] = y;
-	mat[10] = z;
-	mat[15] = 1;
-
-	return mat;
-};
-
-Matrix3D.identity = function () {
-	return Matrix3D.scale(1, 1, 1);
-};
-
-Matrix3D.translate = function (x, y, z) {
-	var mat = Matrix3D.identity();
-
-	mat[3] = x;
-	mat[7] = y;
-	mat[11] = z;
-
-	return mat;
-};
 
 // Line
 // ====

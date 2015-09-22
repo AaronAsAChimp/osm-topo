@@ -37,7 +37,12 @@ class Tile {
 	}
 
 	matrix () {
-		return Matrix3D.translate(Math.floor(-this.tile_bounds.minimum.x), Math.floor(-this.tile_bounds.minimum.y), 0);
+		var tile_mat = Matrix3D.translate(Math.floor(-this.tile_bounds.minimum.x), Math.floor(-this.tile_bounds.minimum.y), 0),
+			flip_y = Matrix3D.mirror_y();
+
+		flip_y.multiply(tile_mat);
+
+		return flip_y;
 	}
 
 }

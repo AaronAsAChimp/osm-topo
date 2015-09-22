@@ -45,18 +45,18 @@ class GeometryManager {
 	}
 
 	add_dupe (point) {
-		let mah_exes = this.dupe_map.get(point.x),
+		let mah_exes = this.dupe_map.get(point.lat),
 			has_y;
 
 		if (!mah_exes) {
 			mah_exes = new Map();
-			this.dupe_map.set(point.x, mah_exes);
+			this.dupe_map.set(point.lat, mah_exes);
 		}
 
-		has_y = mah_exes.has(point.y);
+		has_y = mah_exes.has(point.lng);
 
 		if (!has_y) {
-			mah_exes.set(point.y, true);
+			mah_exes.set(point.lng, true);
 		}
 
 		return !has_y;
@@ -76,14 +76,15 @@ class GeometryManager {
 						// check if the point is in the bounding box.
 						if (manager.tile.geo_bounds.contains_point(point)) {
 
-							// check if we;ve reached the max
-							if (manager.triangulator.points.length < MAX_POINTS) {
+							// check if the point is a duplicate.
+							if (manager.add_dupe(point)) {
 
-								let projected = point.tile(manager.tile.zoom);
-								//console.log('adding', point);
-								
-								// check if the point is a duplicate.
-								if (manager.add_dupe(projected)) {
+								// check if we;ve reached the max
+								if (manager.triangulator.points.length < MAX_POINTS) {
+
+									let projected = point.tile(manager.tile.zoom);
+									//console.log('adding', point);
+
 									manager.triangulator.add(projected);
 
 									if ((manager.triangulator.points.length % LOG_AFTER) === 0) {
@@ -94,14 +95,14 @@ class GeometryManager {
 
 										start = current;
 									}
-								} else {
-									console.log('Skipping point because it is a duplicate.');
-								}
 
+								} else {
+									// Early exit if we are maxed out.
+									console.log('Skipping remaining points because the maximum of ' + MAX_POINTS + ' points were reached.')
+									break;
+								}
 							} else {
-								// Early exit if we are maxed out.
-								console.log('Skipping remaining points because the maximum of ' + MAX_POINTS + ' points were reached.')
-								break;
+								console.log('Skipping point because it is a duplicate.');
 							}
 						} else {
 							console.log('Skipping point because its outside of the bounding box.');
