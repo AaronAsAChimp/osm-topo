@@ -45,3 +45,42 @@ exports['BoundingBox2D'] = {
 		test.done();
 	}
 };
+
+exports['LatLng3D'] = {
+	'Getters and setters': function (test) {
+		var coord = new primitives.LatLng3D();
+
+		coord.lat = 20;
+		coord.lng = 40;
+		coord.ele = 60;
+
+		test.strictEqual(coord[0], 20);
+		test.strictEqual(coord[1], 40);
+		test.strictEqual(coord[2], 60);
+
+		test.done();
+	},
+	'Returned from a generator': function (test) {
+		function* many (n) {
+			while (n) {
+				let coord = new primitives.LatLng3D();
+
+				coord.lat = n * 20;
+				coord.lng = n * 40;
+				coord.ele = n * 60;
+
+				yield coord;
+
+				n--;
+			}
+		}
+
+		for (let coord of many(1)) {
+			test.strictEqual(coord[0], 20);
+			test.strictEqual(coord[1], 40);
+			test.strictEqual(coord[2], 60);
+		}
+
+		test.done();
+	}
+};

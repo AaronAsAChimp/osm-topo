@@ -23,8 +23,8 @@ import Provider from './osm/providers/provider';
 import Triangulator from './geometry/triangulator';
 import projector from './geometry/projector';
 
-//const MAX_POINTS = Infinity;
-const MAX_POINTS = 7000;
+const MAX_POINTS = Infinity;
+// const MAX_POINTS = 7000;
 const LOG_AFTER = 100;
 
 export default
@@ -98,7 +98,7 @@ class GeometryManager {
 
 								} else {
 									// Early exit if we are maxed out.
-									console.log('Skipping remaining points because the maximum of ' + MAX_POINTS + ' points were reached.')
+									console.log('Skipping remaining points because the maximum of ' + MAX_POINTS + ' points were reached.');
 									break;
 								}
 							} else {

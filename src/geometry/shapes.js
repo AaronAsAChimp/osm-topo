@@ -42,6 +42,15 @@ Shape.prototype.tree_can_fit = function (width, height) {
 	throw 'Not Implemented';
 };
 
+// Shape::longest_side
+// -------------------
+// 
+// Should return the longest side of the bounding box of this shape.
+
+Shape.prototype.longest_side = function () {
+	throw 'Not Implemented';
+}
+
 
 // Shape::contains_point
 // ----------------------
@@ -71,6 +80,10 @@ Circle.prototype.tree_split_center = function () {
 Circle.prototype.tree_can_fit = function (width, height) {
 	return ((this.radius * 2) <= width) && ((this.radius * 2) <= height);
 };
+
+Circle.prototype.longest_side = function () {
+	return this.radius * 2;
+}
 
 Circle.prototype.contains_point = function (point) {
 	return this.center.distance_2d(point) < this.radius;

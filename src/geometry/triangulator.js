@@ -22,7 +22,7 @@ var Point3D = require('./primitives').Point3D,
 	//QuadTree = require('./quad-tree'),
 	BoundingBox2D = require('./primitives').BoundingBox2D;
 
-import { SimpleShapeStorage } from './shape-storage';
+import QuadTree from './linear-quad-tree';
 
 // Triangulator
 // ============
@@ -67,7 +67,7 @@ class Triangulator {
 		// console.log('Adding supertriangle');
 
 		// Construct a quad tree of all the circumcircles
-		this.quads = new SimpleShapeStorage(bbox);
+		this.quads = new QuadTree(bbox);
 		this.quads.add(this.super_triangle.circumcircle());
 	}
 
@@ -89,11 +89,18 @@ class Triangulator {
 		// 	bad_circles.push(circ);
 		// });
 
+		// console.log('---- bad circles: begin ----');
+		// console.log('Circles found for point: ', point);
+
 		for (let circ of this.quads.find(point)) {
+
+			// console.log(circ);
 
 			// add it the bad triangle to the list for use later.
 			bad_circles.push(circ);
 		}
+
+		// console.log('---- bad circles: end ----');
 
 		// re-triangulate the hole
 		for (let bad_circ of bad_circles) {
@@ -157,6 +164,7 @@ class Triangulator {
 		var triangles = [];
 
 		for (let circle of this.quads.each()) {
+			// console.log('The circle is: ', circle);
 			let tri = circle.parent,
 				is_super = false,
 				point;

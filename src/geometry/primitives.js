@@ -135,12 +135,12 @@ Point2D.prototype.length_2d = Point2D.prototype.length;
 
 class Point3D extends Point {
 	constructor (x, y, z) {
-
 		super(3);
 
 		this.x = x || 0;
 		this.y = y || 0;
 		this.z = z || 0;
+
 	}
 
 	get x () {
@@ -215,9 +215,10 @@ class Point3D extends Point {
 	// y components.
 
 	distance_2d (point) {
-		var delta = this.subtract_2d(point);
+		var delta_x = this.x - point.x,
+			delta_y = this.y - point.y;
 
-		return delta.length_2d();
+		return Math.sqrt((delta_x * delta_x) + (delta_y * delta_y));
 	}
 }
 
@@ -291,11 +292,11 @@ class Matrix3D extends Matrix {
 		mat[15] = 1;
 
 		return mat;
-	};
+	}
 
 	static identity () {
 		return Matrix3D.scale(1, 1, 1);
-	};
+	}
 
 	static mirror_y () {
 		return Matrix3D.scale(1, -1, 1);
@@ -309,7 +310,7 @@ class Matrix3D extends Matrix {
 		mat[11] = z;
 
 		return mat;
-	};
+	}
 }
 
 // Line
@@ -567,10 +568,10 @@ GeoBoundingBox2D.prototype.tile = function (zoom) {
 };
 
 GeoBoundingBox2D.prototype.contains_point = function (point) {
-	return (point.lat >= this.minimum.lat
-		&& point.lat <= this.maximum.lat
-		&& point.lng >= this.minimum.lng
-		&& point.lng <= this.maximum.lng);
+	return (point.lat >= this.minimum.lat &&
+		point.lat <= this.maximum.lat &&
+		point.lng >= this.minimum.lng &&
+		point.lng <= this.maximum.lng);
 };
 
 // GeoBoundingBox2D::to_overpass()

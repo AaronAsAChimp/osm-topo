@@ -34,6 +34,10 @@ class ShapeStorage {
 		throw new Error('Not Implemented.');
 	}
 
+	contains (shape) {
+		throw new Error('Not Implemented.');
+	}
+
 	each (funk) {
 		throw new Error('Not Implemented.');
 	}
@@ -71,6 +75,10 @@ class SimpleShapeStorage extends ShapeStorage {
 			}
 		}
 
+	}
+
+	contains (shape) {
+		return this.shapes.indexOf(shape) >= 0;
 	}
 
 	// QuadTree::list

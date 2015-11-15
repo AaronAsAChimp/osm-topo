@@ -62,7 +62,6 @@ function *projector(geography) {
 				// Parse the elevation
 				let parsed_ele = distance_regex.exec(ele_tag),
 					units = parsed_ele[2],
-					coord = new LatLng3D(),
 					elevation;
 
 				if (!units || units in CONVERSION_FACTORS) {
@@ -75,6 +74,7 @@ function *projector(geography) {
 					}
 
 					if (node.position) {
+						let coord = new LatLng3D();
 						coord.lat = node.position.lat;
 						coord.lng = node.position.lng;
 						coord.ele = elevation;

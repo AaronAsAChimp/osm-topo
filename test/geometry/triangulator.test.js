@@ -66,6 +66,8 @@ exports['Triangulator'] = {
 
 		let triangles = triangulator.get_triangles();
 
+		// console.log('The triangles are: ', triangles);
+
 		test.strictEqual(triangles.length, 1, 'There should be one triangle');
 
 		test.strictEqual(triangles[0].lookup(0), point, 'Points should match');
@@ -119,6 +121,7 @@ exports['Triangulator'] = {
 	},
 
 	'Overlap test': function (test) {
+		console.log('**** test: start ****');
 		let bbox = new primitives.BoundingBox2D();
 
 		bbox.minimum.x = 4;
@@ -142,6 +145,7 @@ exports['Triangulator'] = {
 			];
 
 		for (let point of points) {
+			console.log('Adding point');
 			triangulator.add(point);
 		}
 
@@ -150,5 +154,6 @@ exports['Triangulator'] = {
 		test.strictEqual(triangles.length, 14, 'There should be fourteen triangles');
 
 		test.done();
+		console.log('**** test: end ****');
 	}
 };

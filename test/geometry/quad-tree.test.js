@@ -21,7 +21,8 @@
 
 var shapes = require('../../lib/geometry/shapes'),
 	primitives = require('../../lib/geometry/primitives'),
-	QuadTree = require('../../lib/geometry/quad-tree');
+	LinearQuadTree = require('../../lib/geometry/linear-quad-tree').default,
+	QuadTree = LinearQuadTree;
 
 const BBOX_SIZE = 512;
 
@@ -57,7 +58,7 @@ var ShapeGenerators = {
 	}
 };
 
-exports['Quad Tree Node'] = {
+/*exports['Quad Tree Node'] = {
 	'Choosing a child': function (test) {
 		let center = new primitives.Point3D(0, 0, 0),
 			qtn = new QuadTree.QuadTreeNode(center, BBOX_SIZE / 2, BBOX_SIZE / 2, 1),
@@ -121,6 +122,58 @@ exports['Quad Tree Node'] = {
 
 		test.done();
 	}
+};*/
+
+// The sheet should be calculated using the following table:
+// 
+// tier 0: 512 <= shape width < Infinity
+// tier 1: 256 <= shape width < 512
+// tier 2: 128 <= shaoe width < 256
+// tier 3:  64 <= shape width < 128
+// tier 4:  32 <= shape width < 64
+// tier 5:  16 <= shape width < 32
+// tier 6:   8 <= shape width < 16
+// tier 7:   0 <= shape width < 8
+
+function tier_tester(test, qt, bbox_width, tier, widths) {
+	let index;
+
+	for (let width of widths) {
+		index = qt._sheet_index(bbox_width, width, 8);
+
+		test.strictEqual(index, tier, 'When the width is ' + width + ' the tier should be ' + tier);
+	}
+}
+
+exports['Linear Quad Tree: Tier tests'] = {
+	'setUp': function (funk) {
+		let bbox = new primitives.BoundingBox2D();
+
+		bbox.minimum.x = 0;
+		bbox.minimum.y = 0;
+		bbox.maximum.x = BBOX_SIZE;
+		bbox.maximum.y = BBOX_SIZE;
+
+		this.qt = new QuadTree(bbox);
+
+		funk();
+	},
+	'Can calculate the correct sheet for tier 0': function (test) {
+		let testable_widths = [800, 512],
+			index;
+
+		tier_tester(test, this.qt, BBOX_SIZE, 0, testable_widths);
+		
+		test.done();
+	},
+	'Can calculate the correct sheet for tier 1': function (test) {
+		let testable_widths = [256, 400, 511.9999],
+			index;
+
+		tier_tester(test, this.qt, BBOX_SIZE, 1, testable_widths);
+		
+		test.done();
+	}
 };
 
 exports['Quad Tree'] = {
@@ -145,11 +198,38 @@ exports['Quad Tree'] = {
 
 		qt.add(shape);
 
-		test.strictEqual(qt.root.shapes.length, 1, 'There should be exactly one shape.');
+		test.ok(qt.contains(shape), 'The tree should contain the circle.');
 
 		qt.remove(shape);
 
-		test.strictEqual(qt.root.shapes.length, 0, 'There should be no remaining shapes.');
+		test.ok(!qt.contains(shape), 'The tree should no longer contain the shape.');
+
+		test.done();
+	},
+
+	'Add and Remove a Circle in a grid with a size of 1': function (test) {
+
+		let bbox = new primitives.BoundingBox2D();
+
+		bbox.minimum.x = 111;
+		bbox.minimum.y = 47;
+		bbox.maximum.x = 112;
+		bbox.maximum.y = 48;
+
+		let shape = new shapes.Circle(),
+			qt = new QuadTree(bbox);
+
+		shape.radius = 0.125;
+		shape.center.x = 111.6667;
+		shape.center.y = 47.8887;
+
+		qt.add(shape);
+
+		test.ok(qt.contains(shape), 'The tree should contain the circle.');
+
+		qt.remove(shape);
+
+		test.ok(!qt.contains(shape), 'The tree should no longer contain the shape.');
 
 		test.done();
 	},
@@ -168,8 +248,8 @@ exports['Quad Tree'] = {
 		}
 
 		// Compare the shapes we added earlier to the ones retrieved by find.
-		for (let shape of qt.find(center)) {
-			test.equal(shape, circles[index], 'The shapes should match at ' + index);
+		for (let shape of circles) {
+			test.ok(qt.contains(shape), 'The quad tree should contain the shape at' + index);
 
 			index++;
 		}
@@ -208,6 +288,9 @@ exports['Quad Tree'] = {
 		qt.add(shape_top_right);
 		qt.add(shape_bottom_left);
 
+		test.ok(qt.contains(shape_top_right), 'Does the quad tree contain the top right circle');
+		test.ok(qt.contains(shape_bottom_left), 'Does the quad tree contain the bottom left circle');
+
 		let count = 0;
 		for (let shape of qt.find(test_point)) {
 			test.strictEqual(shape, shape_top_right, 'Should be the top right circle');
@@ -240,12 +323,95 @@ exports['Quad Tree'] = {
 
 		let count = 0;
 		for (let shape of qt.each()) {
-			test.strictEqual(shape, test_shapes[count], 'Should match element ' + count);
+			test.ok(test_shapes.indexOf(shape) >= 0, 'Should match element ' + count);
 			count++;
 		}
 
-		test.strictEqual(count, 2, 'Should only return one element');
+		test.strictEqual(count, 2, 'Should return two elements');
 
+		test.done();
+	},
+	'Finding a shape that intersects with a different quadrant': function (test) {
+		console.log('**** test: start ****');
+
+		let query = new primitives.Point2D(300, 300),
+			qt = new QuadTree(this.bbox),
+			shape = new shapes.Circle(),
+			count = 0;
+
+		shape.center.x = 255;
+		shape.center.y = 255;
+		shape.radius = 128;
+
+		qt.add(shape);
+
+		for (let found of qt.find(query)) {
+			count++;
+		}
+
+		test.strictEqual(count, 1, 'There should be only one shape returned');
+		test.done();
+
+		console.log('**** test: end ****');
+	},
+	'Add three circles that are out of bounds and query for two': function (test) {
+		let query = new primitives.Point3D(256, 266, 0),
+			qt = new QuadTree(this.bbox),
+			count = 0;
+
+		let circle2 = new shapes.Circle(),
+			circle3 = new shapes.Circle(),
+			circle4 = new shapes.Circle();
+
+		circle2.center.x = 512;
+		circle2.center.y = -256;
+		circle2.radius = 572.4334022399462;
+
+		circle3.center.x = 896;
+		circle3.center.y = 896;
+		circle3.radius = 905.0966799187809;
+
+		circle4.center.x = -256;
+		circle4.center.y = 512;
+		circle4.radius = 572.4334022399462;
+
+		qt.add(circle2);
+		qt.add(circle3);
+		qt.add(circle4);
+
+		for (let found of qt.find(query)) {
+			console.log('Circle found: ', found);
+			count++;
+		}
+
+		test.strictEqual(count, 2, 'There should be only one shape returned');
+		test.done();
+	},
+	'Add three circles, but query for two': function (test) {
+		let bbox = new primitives.BoundingBox2D();
+
+		bbox.minimum.x = 4;
+		bbox.minimum.y = 28;
+		bbox.maximum.x = 5;
+		bbox.maximum.y = 29;
+
+		let query = new primitives.Point3D(4.221674364444445, 28.235310285480896, 0.004878878423563032),
+			qt = new QuadTree(bbox),
+			circle = new shapes.Circle(),
+			count = 0;
+
+		circle.center.x = 5;
+		circle.center.y = 29;
+		circle.radius = 1.4142135623730951;
+
+		qt.add(circle);
+
+		for (let found of qt.find(query)) {
+			console.log('Circle found: ', found);
+			count++;
+		}
+
+		test.strictEqual(count, 1, 'There should be only one shape returned');
 		test.done();
 	}
 };

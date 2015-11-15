@@ -32,23 +32,25 @@ class Element {
 	nodes (catalog) {
 		throw new Error('Method not implemented');
 	}
+
+	// Reconstitute a osm element from json. This is the standard json response
+	// returned from something like the Overpass API.
+
+	static 
+	from_json (json) {
+		var ElementType = Element.TYPES[json.type],
+			element = ElementType.from_json(json);
+
+		if (json.tags) {
+			element.tags = json.tags;
+		}
+
+		element.id = json.id;
+
+		return element;
+	}
 }
 
-// Reconstitute a osm element from json. This is the standard json response
-// returned from something like the Overpass API.
-
-Element.from_json = function (json) {
-	var ElementType = Element.TYPES[json.type],
-		element = ElementType.from_json(json);
-
-	if (json.tags) {
-		element.tags = json.tags;
-	}
-
-	element.id = json.id;
-
-	return element;
-};
 
 
 class Reference {
@@ -73,16 +75,17 @@ class Node extends Element {
 	*nodes () {
 		yield this;
 	}
+
+	static
+	from_json (json) {
+		var node = new Node();
+
+		node.position.lat = json.lat;
+		node.position.lng = json.lon;
+
+		return node;
+	}
 }
-
-Node.from_json = function (json) {
-	var node = new Node();
-
-	node.position.lat = json.lat;
-	node.position.lng = json.lon;
-
-	return node;
-};
 
 export
 class Way extends Element {
@@ -97,17 +100,18 @@ class Way extends Element {
 			yield node.get(catalog);
 		}
 	}
+
+	static
+	from_json (json) {
+		var way = new Way();
+
+		way._nodes = json.nodes.map(function (id) {
+			return new Reference(id);
+		});
+
+		return way;
+	}
 }
-
-Way.from_json = function (json) {
-	var way = new Way();
-
-	way._nodes = json.nodes.map(function (id) {
-		return new Reference(id);
-	});
-
-	return way;
-};
 
 
 class RelationMember {
@@ -132,17 +136,18 @@ class Relation extends Element {
 			}
 		}
 	}
+
+	static 
+	from_json (json) {
+		var relation = new Relation();
+
+		this.members = json.members.map(function (ref) {
+			return new RelationMember(ref);
+		});
+
+		return relation;
+	}
 }
-
-Relation.from_json = function (json) {
-	var relation = new Relation();
-
-	this.members = json.members.map(function (ref) {
-		return new RelationMember(ref);
-	});
-
-	return relation;
-};
 
 
 Element.TYPES = {
