@@ -22,7 +22,15 @@
 			<% _.each(triangulators, function (tri) { %>
 				<node>
 					<matrix sid="transform"><%= join(matrix) %></matrix>
-					<instance_geometry url="#<%= tri.geometry_id %>"></instance_geometry>
+					<instance_geometry url="#<%= tri.geometry_id %>">
+						<bind_material>
+							<technique_common>
+								<instance_material symbol="<%= tri.material_id %>" target="#<%= tri.material_id %>">
+									<bind_vertex_input semantic="UVMap" input_semantic="TEXCOORD" input_set="0"/>
+								</instance_material>
+							</technique_common>
+						</bind_material>
+					</instance_geometry>
 				</node>
 			<% }) %>
 		</visual_scene>

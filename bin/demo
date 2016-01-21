@@ -29,7 +29,7 @@ const cluster = require('cluster'),
 	  http = require('http'),
 	  os = require('os'),
 	  OverpassProvider = import_default('../lib/osm/providers/overpass'),
-	  OUTPUT_FORMAT = 'stl',
+	  OUTPUT_FORMAT = 'collada',
 	  DIR_DEMOS = 'demo/',
 	  DIR_TEXTURES = DIR_DEMOS + 'textures/';
 
