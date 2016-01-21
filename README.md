@@ -19,3 +19,9 @@ $ bin/demo
 
 The data used by this application is retrieved using the Overpass API and
 is Copyright (C) [OpenStreetMap contributors](https://www.openstreetmap.org/copyright).
+
+Notes:
+------
+
+Until [this bug](https://github.com/nodejs/node/issues/3439) is fixed, osm-topo
+will only run in Node v3.3.

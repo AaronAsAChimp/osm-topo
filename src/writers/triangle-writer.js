@@ -17,69 +17,75 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-var fs = require('fs'),
-	Matrix3D = require('../geometry/primitives').Matrix3D;
+var fs = require('fs');
 
-function TriangleWriter (filename) {
-	var writer = this;
+import { Matrix3D } from '../geometry/primitives';
 
-	this.triangulators = [];
-	this.matrix = Matrix3D.identity();
+export default
+class TriangleWriter {
 
-	this.stream = fs.createWriteStream(filename, {
-		'flags': 'w'
-	});
+	constructor (filename) {
+		var writer = this;
 
-	this.promise = new Promise(function (resolve, reject) {
-		writer.stream.on('err', function (err) {
-			reject();
+		this.triangulators = [];
+		this.matrix = Matrix3D.identity();
+
+		this.stream = fs.createWriteStream(filename, {
+			'flags': 'w'
 		});
 
-		writer.stream.on('finish', function () {
-			resolve();
+		this.promise = new Promise(function (resolve, reject) {
+			writer.stream.on('err', function (err) {
+				reject();
+			});
+
+			writer.stream.on('finish', function () {
+				resolve();
+			});
 		});
-	});
 
-	console.log('Writing header');
-	this.write_header();
-}
-
-module.exports = TriangleWriter;
-
-TriangleWriter.prototype.map_triangles = function () {
-	throw 'Not Implemented';
-};
-
-TriangleWriter.prototype.write_header = function () {
-	throw 'Not Implemented';
-};
-
-TriangleWriter.prototype.write_content = function () {
-	throw 'Not Implemented';
-};
-
-TriangleWriter.prototype.write_footer = function () {
-	throw 'Not Implemented';
-};
-
-TriangleWriter.prototype.add = function (triangulator) {
-	if (triangulator) {
-		this.triangulators.push(this.map_triangles(triangulator));
-	} else {
-		throw new Error('Triangulator was not defined');
+		console.log('Writing header');
+		this.write_header();
 	}
-};
 
-TriangleWriter.prototype.finish = function () {
-	console.log('Writing content');
-	this.write_content();
+	static
+	get_extension () {
+		throw 'Not Implemented';
+	}
 
-	console.log('Writing footer');
-	this.write_footer();
+	map_triangles () {
+		throw 'Not Implemented';
+	}
 
-	this.stream.end();
+	write_header () {
+		throw 'Not Implemented';
+	}
 
-	return this.promise;
-};
+	write_content () {
+		throw 'Not Implemented';
+	}
 
-module.exports = TriangleWriter;
+	write_footer () {
+		throw 'Not Implemented';
+	}
+
+	add (triangulator) {
+		if (triangulator) {
+			this.triangulators.push(this.map_triangles(triangulator));
+		} else {
+			throw new Error('Triangulator was not defined');
+		}
+	}
+
+	finish () {
+		console.log('Writing content');
+		this.write_content();
+
+		console.log('Writing footer');
+		this.write_footer();
+
+		this.stream.end();
+
+		return this.promise;
+	}
+}

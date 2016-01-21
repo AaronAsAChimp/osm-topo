@@ -183,6 +183,16 @@ class Triangulator {
 
 		console.log('Triangles created ', triangles.length);
 
+		//this.quads.render('quad-tree.png');
+
 		return triangles;
+	}
+
+	set_image_path (path) {
+		this._image_path = path;
+	}
+
+	get_image_path () {
+		return this._image_path;
 	}
 }

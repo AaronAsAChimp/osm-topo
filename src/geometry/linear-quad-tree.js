@@ -23,6 +23,9 @@ import { Shape } from './shapes';
 
 const TREE_DEPTH = 8;
 
+var Canvas = require('canvas'),
+	fs = require('fs');
+
 class QuadTreeSheet extends Array {
 	constructor (size) {
 		super(size);
@@ -54,6 +57,27 @@ class QuadTreeSheet extends Array {
 		for (let column of this) {
 			for (let quad of column) {
 				yield quad;
+			}
+		}
+	}
+
+	render (ctx, dimension) {
+		let columns = this.size,
+			pixel_width = dimension / this.size;
+
+		while (columns) {
+			columns--;
+
+			let rows = this.size;
+
+			while (rows) {
+				rows--;
+
+				let quad = this.get_quad(columns, rows);
+
+				if (quad.length > 0) {
+					ctx.fillRect(columns * pixel_width, rows * pixel_width, pixel_width, pixel_width);
+				}
 			}
 		}
 	}
@@ -265,5 +289,44 @@ class QuadTree extends ShapeStorage {
 				}
 			}
 		}
+	}
+
+	render (filename) {
+		let current_depth = this.sheets.length,
+			dimension = this._columns(this.sheets.length - 1),
+			canvas = new Canvas(dimension * this.sheets.length, dimension),
+			ctx = canvas.getContext('2d'),
+			out = fs.createWriteStream(filename),
+			stream;
+
+		ctx.fillStyle = 'red';
+		//ctx.globalAlpha = 1 / this.sheets.length;
+		ctx.strokeStyle = 'black';
+
+		while (current_depth) {
+			current_depth--;
+
+			ctx.save();
+			ctx.translate(current_depth * dimension, 0);
+
+			this.sheets[current_depth].render(ctx, dimension);
+
+			if (current_depth > 0) {
+				ctx.fillStyle = 'black';
+				ctx.fillRect(0, 0, 1, dimension);
+			}
+			ctx.restore();
+		}
+
+		stream = canvas.pngStream();
+
+		stream.on('data', function(chunk){
+			out.write(chunk);
+		});
+
+		stream.on('end', function(){
+			console.log('saved png');
+		});
+
 	}
 }

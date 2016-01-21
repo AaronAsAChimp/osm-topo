@@ -18,10 +18,10 @@
 */
 
 const EARTH_RADIUS = 6378100, // The equitorial radius in meters, source http://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
-	EARTH_CIRCUMFERENCE = EARTH_RADIUS * 2 * Math.PI,
-	DEGS_PER_RAD = 180 / Math.PI,
-	RADS_PER_DEG = Math.PI / 180,
-	PI_4 = Math.PI / 4;
+	  EARTH_CIRCUMFERENCE = EARTH_RADIUS * 2 * Math.PI,
+	  DEGS_PER_RAD = 180 / Math.PI,
+	  RADS_PER_DEG = Math.PI / 180,
+	  PI_4 = Math.PI / 4;
 
 class Point extends Float64Array {
 
@@ -35,7 +35,7 @@ class Point extends Float64Array {
 
 		// console.log('delta', this.z, point.z);
 
-		return delta.length();
+		return delta.magnitude();
 	}
 
 }
@@ -119,13 +119,13 @@ class Point2D extends Point {
 	// 
 	// Calcualate the length of this vector.
 
-	length () {
+	magnitude () {
 		return Math.sqrt((this.x * this.x) + (this.y * this.y));
 	}
 }
 
 Point2D.prototype.subtract_2d = Point2D.prototype.subtract;
-Point2D.prototype.length_2d = Point2D.prototype.length;
+Point2D.prototype.magnitude_2d = Point2D.prototype.magnitude;
 
 
 // Point3D
@@ -189,7 +189,7 @@ class Point3D extends Point {
 	// 
 	// Calcualate the length of this vector.
 
-	length () {
+	magnitude () {
 		return Math.sqrt((this.x * this.x) + (this.y * this.y) + (this.z * this.z));
 	}
 
@@ -226,7 +226,7 @@ class Point3D extends Point {
 
 Point3D.prototype.geo = Point2D.prototype.geo;
 Point3D.prototype.subtract_2d = Point2D.prototype.subtract;
-Point3D.prototype.length_2d = Point2D.prototype.length;
+Point3D.prototype.magnitude_2d = Point2D.prototype.magnitude;
 
 
 class Matrix extends Float64Array {

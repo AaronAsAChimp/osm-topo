@@ -21,10 +21,17 @@
 
 'use strict';
 
-var cluster = require('cluster'),
-	http = require('http'),
-	os = require('os'),
-	OverpassProvider = require('../lib/osm/providers/overpass').default;
+function import_default(from) {
+	return require(from).default;
+}
+
+const cluster = require('cluster'),
+	  http = require('http'),
+	  os = require('os'),
+	  OverpassProvider = import_default('../lib/osm/providers/overpass'),
+	  OUTPUT_FORMAT = 'stl',
+	  DIR_DEMOS = 'demo/',
+	  DIR_TEXTURES = DIR_DEMOS + 'textures/';
 
 var sample_tiles = [
 	{
@@ -59,19 +66,22 @@ if (cluster.isMaster) {
 		return function (message) {
 			console.log('Worker ' + worker_index + ' said: ' + message);
 
-			if (message == 'started' || message == 'done') {
+			if (message === 'started' || message === 'done') {
 
-				let next_tile = sample_tiles.shift();
+				let work = {
+					'tile': sample_tiles.shift(),
+					'writer': OUTPUT_FORMAT
+				};
 
 				// If we got something from the array send it to the worker.
-				if (next_tile) {
-					worker.send(next_tile);
+				if (work.tile) {
+					worker.send(work);
 				} else {
 					// Otherwise the queue is empty so kill the worker.
 					worker.kill();
 				}
 			}
-		}
+		};
 	}
 
 	// Fork workers.
@@ -88,25 +98,28 @@ if (cluster.isMaster) {
 	//console.log(cluster.workers);
 
 } else {
-	var error_handler = require('../lib/error-handler').default,
-		ColladaWriter = require('../lib/writers/collada-writer'),
-		StlWriter = require('../lib/writers/stl-writer'),
-		GeometryManager = require('../lib/geometry-manager').default,
-		Tile = require('../lib/osm/tile').default,
-		_ = require('lodash');
+	const error_handler = import_default('../lib/error-handler'),
+		  writer_registry = import_default('../lib/writers/registry').instance(),
+		  GeometryManager = import_default('../lib/geometry-manager'),
+		  Tile = import_default('../lib/osm/tile'),
+		  RemoteImagery = import_default('../lib/osm/imagery/remote-imagery'),
+		  _ = require('lodash');
 
 	var provider = new OverpassProvider();
+	var imagery = new RemoteImagery('http://{s}.tile.osm.org/{z}/{x}/{y}.png');
 
 	console.log('Worker joined');
 
 	cluster.worker.send('started');
 
-	cluster.worker.on('message', function (sample) {
+	cluster.worker.on('message', function (work) {
+		var sample = work.tile;
 		console.log('Working on tile ' + sample.name);
 
 		let filename = sample.name.toLowerCase().replace(/[, \-]+/g, '-'),
 			tile = new Tile(sample.tile[0], sample.tile[1], sample.tile[2]),
-			manager = new GeometryManager(tile);
+			manager = new GeometryManager(tile),
+			Writer = writer_registry.get(work.writer);
 
 		console.log('Building geometry for tile ' + sample.name);
 
@@ -114,8 +127,10 @@ if (cluster.isMaster) {
 
 		manager.get_triangles()
 			.then(function (triangulator) {
+				triangulator.set_image_path(imagery.build_filename(tile, './textures/'));
+
 				console.log('Creating writer');
-				var writer = new StlWriter('demo/' + filename + '.stl');
+				var writer = new Writer(DIR_DEMOS + filename + Writer.get_extension());
 
 				console.log('Building matrix for writer');
 				writer.matrix.multiply(tile.matrix());
@@ -124,11 +139,13 @@ if (cluster.isMaster) {
 				writer.add(triangulator);
 
 				console.log('Finishing writing.');
-				writer.finish()
+
+				Promise.all([writer.finish(), imagery.get(tile, DIR_TEXTURES)])
 					.then(function () {
 						console.log('File written');
 						cluster.worker.send('done');
 					}, error_handler(sample.name + ': writing file'));
+
 
 			}, error_handler(sample.name + ': getting triangles'))
 				.catch(error_handler(sample.name + ': preparing triangle writer'));

@@ -23,6 +23,10 @@ var BoundingBox2D = require('../geometry/primitives').BoundingBox2D,
 export default
 class Tile {
 	constructor(zoom, x, y) {
+		this.z = zoom;
+		this.x = x;
+		this.y = y;
+
 		this.zoom = 1 << zoom;
 
 		this.tile_bounds = new BoundingBox2D();
@@ -41,6 +45,7 @@ class Tile {
 			flip_y = Matrix3D.mirror_y();
 
 		flip_y.multiply(tile_mat);
+		flip_y.multiply(Matrix3D.translate(0, -1, 0));
 
 		return flip_y;
 	}

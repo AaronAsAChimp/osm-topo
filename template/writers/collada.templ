@@ -1,32 +1,87 @@
 <% /*
-    osm-topo - 3D map generator
-    Copyright (C) 2015  Aaron Spaulding
+	osm-topo - 3D map generator
+	Copyright (C) 2015  Aaron Spaulding
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+	You should have received a copy of the GNU General Public License along
+	with this program; if not, write to the Free Software Foundation, Inc.,
+	51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */ %><?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
 	<library_visual_scenes>
 		<visual_scene id="<%= visual_scene_id %>">
 			<% _.each(triangulators, function (tri) { %>
 				<node>
-					<matrix sid="transform"><%= join(matrix.mat) %></matrix>
+					<matrix sid="transform"><%= join(matrix) %></matrix>
 					<instance_geometry url="#<%= tri.geometry_id %>"></instance_geometry>
 				</node>
 			<% }) %>
 		</visual_scene>
 	</library_visual_scenes>
+
+	<library_images>
+		<% _.each(triangulators, function (tri) { %>
+			<image id="<%= tri.image_id %>" name="<%= tri.image_id %>">
+				<init_from><%= tri.image_path %></init_from>
+			</image>
+		<% }) %>
+	</library_images>
+	<library_effects>
+		<% _.each(triangulators, function (tri) { %>
+			<effect id="<%= tri.effect_id %>">
+				<profile_COMMON>
+					<newparam sid="<%= tri.image_id %>_SURFACE">
+						<surface type="2D">
+							<init_from><%= tri.image_id %></init_from>
+						</surface>
+					</newparam>
+					<newparam sid="<%= tri.image_id %>_SAMPLER">
+						<sampler2D>
+							<source><%= tri.image_id %>_SURFACE</source>
+						</sampler2D>
+					</newparam>
+					<technique sid="common">
+						<phong>
+							<emission>
+								<color sid="emission">0 0 0 1</color>
+							</emission>
+							<ambient>
+								<color sid="ambient">0 0 0 1</color>
+							</ambient>
+							<diffuse>
+								<texture texture="<%= tri.image_id %>_SAMPLER" texcoord="ID3"/>
+							</diffuse>
+							<specular>
+								<color sid="specular">0.5 0.5 0.5 1</color>
+							</specular>
+							<shininess>
+								<float sid="shininess">50</float>
+							</shininess>
+							<index_of_refraction>
+								<float sid="index_of_refraction">1</float>
+							</index_of_refraction>
+						</phong>
+					</technique>
+				</profile_COMMON>
+			</effect>
+		<% }) %>
+	</library_effects>
+	<library_materials>
+		<% _.each(triangulators, function (tri) { %>
+			<material id="<%= tri.material_id %>" name="<%= tri.material_id %>">
+				<instance_effect url="#<%= tri.effect_id %>"/>
+			</material>
+		<% }) %>
+	</library_materials>
 
 	<library_geometries>
 		<% _.each(triangulators, function (tri) { %>
@@ -44,11 +99,23 @@
 							</accessor>
 						</technique_common>
 					</source>
+					<source id="<%= tri.texcoord_id %>">
+						<float_array id="<%= tri.texcoord_id %>_SOURCE" count="<%= tri.verticies.length * 2 %>">
+							<%= flatten_texcoords(tri.verticies) %>
+						</float_array>
+						<technique_common>
+							<accessor count="<%= tri.verticies.length %>" stride="2" source="#<%= tri.texcoord_id %>_SOURCE">
+								<param name="S" type="float" />
+								<param name="T" type="float" />
+							</accessor>
+						</technique_common>
+					</source>
 					<vertices id="<%= tri.vertex_id %>">
 						<input semantic="POSITION" source="#<%= tri.geometry_id %>_SOURCE" />
 					</vertices>
 					<triangles count="<%= tri.triangles.length %>">
 						<input offset="0" semantic="VERTEX" source="#<%= tri.vertex_id %>" />
+						<input offset="0" semantic="TEXCOORD" source="#<%= tri.texcoord_id %>"/>
 						<p><%= flatten_triangles(tri.triangles) %></p>
 					</triangles>
 				</mesh>

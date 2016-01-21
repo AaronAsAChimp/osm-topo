@@ -2,6 +2,7 @@
 
 ### osm-topo ###
 lib
+etc/keys/
 
 ### Node ###
 # Logs

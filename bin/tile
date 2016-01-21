@@ -19,13 +19,18 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
+function import_default(from) {
+	return require(from).default;
+}
+
 var program = require('commander'),
-	error_handler = require('../lib/error-handler').default,
-	OverpassProvider =  require('../lib/osm/providers/overpass').default,
-	ColladaWriter = require('../lib/writers/collada-writer'),
-	StlWriter = require('../lib/writers/stl-writer'),
-	GeometryManager = require('../lib/geometry-manager').default,
-	Tile = require('../lib/osm/tile').default;
+	error_handler = import_default('../lib/error-handler'),
+	OverpassProvider =  import_default('../lib/osm/providers/overpass'),
+	GeometryManager = import_default('../lib/geometry-manager'),
+	Tile = import_default('../lib/osm/tile'),
+	WriterRegistry = import_default('../lib/writers/registry'),
+	//OUTPUT_FORMAT = 'collada';
+	OUTPUT_FORMAT = 'stl';
 
 program
 	.description('build the geometry for a single tile')
@@ -49,7 +54,9 @@ var z = uint_param(program, 0, 'map zoom'),
 
 console.log('Preparing tile ' + z + ', ' + x + ', ' + y);
 
-var	tile = new Tile(z, x, y),
+var	writer_registry = WriterRegistry.instance(),
+	Writer = writer_registry.get(OUTPUT_FORMAT),
+	tile = new Tile(z, x, y),
 	provider = new OverpassProvider(tile.geo_bounds),
 	manager = new GeometryManager(tile);
 
@@ -57,8 +64,7 @@ manager.add_geometry(provider);
 
 manager.get_triangles()
 	.then(function (triangulator) {
-		//var writer = new ColladaWriter('test.dae');
-		var writer = new StlWriter(z + '-' + x + '-' + y + '.stl');
+		var writer = new Writer(z + '-' + x + '-' + y + Writer.get_extension());
 
 		writer.matrix.multiply(tile.matrix());
 
