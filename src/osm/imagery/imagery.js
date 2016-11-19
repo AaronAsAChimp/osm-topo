@@ -29,7 +29,19 @@ class Imagery {
 		return path.join(root_dir, tile.z + '-' + tile.x + '-' + tile.y + '.png');
 	}
 
-	get(tile, root_dir) {
+	get_size() {
+		throw 'Not Implemented';
+	}
+
+    get_max_zoom() {
+        throw 'Not Implemented';
+    }
+
+    get_min_zoom() {
+        throw 'Not Implemented';
+    }
+
+	get(tile) {
 		throw 'Not Implemented';
 	}
 

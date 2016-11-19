@@ -124,7 +124,7 @@ class QuadTree extends ShapeStorage {
 			coord = 0;
 		}
 
-		return coord
+		return coord;
 	}
 
 	_sheet_index(quad_size, shape_size, sheets) {
@@ -169,7 +169,7 @@ class QuadTree extends ShapeStorage {
 
 		//console.log('Quad-tile coordinates: ', x, y);
 		//console.log('Quad-tile size: ', sheet.size);
-		
+
 		// console.log(quad.length);
 
 		//console.log('---- add: end ----');
@@ -202,7 +202,7 @@ class QuadTree extends ShapeStorage {
 	/*
 		-1 -1,  0 -1, +1 -1
 		-1  0,  0  0, +1  0
-		-1 +1,  0 +1, +1 +1 
+		-1 +1,  0 +1, +1 +1
 	 */
 
 	*_neighboring (sheet, x, y) {
@@ -271,7 +271,7 @@ class QuadTree extends ShapeStorage {
 
 	// QuadTree::list
 	// --------------
-	// 
+	//
 	// Return a list of all the shapes that are in the quad tree.
 
 	*each () {

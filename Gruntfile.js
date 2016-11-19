@@ -40,16 +40,14 @@ module.exports = function(grunt) {
 		},
 		babel: {
 			options: {
-				'modules': 'commonStrict',
-				'whitelist': [
-					'es6.modules',
-					'es6.arrowFunctions',
-					//'minification.deadCodeElimination',
-					//'minification.constantFolding',
-					'strict'
-				],
-				'optional': [
-					'runtime'
+				'plugins': [
+					'transform-strict-mode',
+					'transform-runtime',
+					'check-es2015-constants',
+					'transform-es2015-parameters',
+					'transform-es2015-arrow-functions',
+					'transform-es2015-modules-commonjs',
+					'transform-merge-sibling-variables'
 				]
 			},
 			dist: {

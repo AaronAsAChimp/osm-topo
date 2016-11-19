@@ -28,6 +28,7 @@ function import_default(from) {
 const cluster = require('cluster'),
 	  http = require('http'),
 	  os = require('os'),
+	  fs = require('fs'),
 	  OverpassProvider = import_default('../lib/osm/providers/overpass'),
 	  OUTPUT_FORMAT = 'collada',
 	  DIR_DEMOS = 'demo/',
@@ -103,10 +104,18 @@ if (cluster.isMaster) {
 		  GeometryManager = import_default('../lib/geometry-manager'),
 		  Tile = import_default('../lib/osm/tile'),
 		  RemoteImagery = import_default('../lib/osm/imagery/remote-imagery'),
+		  StitchedImagery = import_default('../lib/osm/imagery/stitched-imagery'),
 		  _ = require('lodash');
 
 	var provider = new OverpassProvider();
-	var imagery = new RemoteImagery('http://{s}.tile.osm.org/{z}/{x}/{y}.png');
+	// var remote_imagery = new RemoteImagery('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+	// 		'maxZoom': 19
+	// 	}),
+	// 	imagery = new StitchedImagery(remote_imagery);
+
+	var imagery = new RemoteImagery('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+			'maxZoom': 19
+		});
 
 	console.log('Worker joined');
 
@@ -127,6 +136,7 @@ if (cluster.isMaster) {
 
 		manager.get_triangles()
 			.then(function (triangulator) {
+
 				triangulator.set_image_path(imagery.build_filename(tile, './textures/'));
 
 				console.log('Creating writer');
@@ -140,10 +150,22 @@ if (cluster.isMaster) {
 
 				console.log('Finishing writing.');
 
-				Promise.all([writer.finish(), imagery.get(tile, DIR_TEXTURES)])
-					.then(function () {
-						console.log('File written');
-						cluster.worker.send('done');
+				Promise.all([writer.finish(), imagery.get(tile)])
+					.then(function (promises) {
+						var image_stream = promises[1],
+							out_stream = fs.createWriteStream(imagery.build_filename(tile, DIR_TEXTURES));
+
+						out_stream.on('error', function (e) {
+							error_handler(sample.name + ': writing texture file')(e);
+							cluster.worker.send('done');
+						});
+						out_stream.on('finish', function () {
+							console.log('File written');
+							cluster.worker.send('done');
+						});
+
+						image_stream.pipe(out_stream);
+
 					}, error_handler(sample.name + ': writing file'));
 
 

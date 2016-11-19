@@ -22,6 +22,11 @@
 export default
 class Provider {
 
+	// Provider::get
+	// -------------
+	// Get the data contained with in the bounding box. Limiting the number of
+	// items returned to the value of `limit`.
+
 	get (bbox, limit) {
 		throw new Error('method not implemented');
 	}

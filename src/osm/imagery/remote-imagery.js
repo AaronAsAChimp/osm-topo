@@ -21,8 +21,7 @@
 
 import Imagery from './imagery';
 
-var fs = require('fs'),
-	_ = require('lodash'),
+var _ = require('lodash'),
 	request = require('request');
 
 const TEMPLATE_DELIMITER = /\{(.+?)\}/g;
@@ -37,7 +36,11 @@ class RemoteImagery extends Imagery {
 		this.template = _.template(url, {
 			interpolate: TEMPLATE_DELIMITER
 		});
+
 		this.subdomains = config.subdomains || 'abc';
+		this.tileSize = config.tileSize || 256;
+		this.maxZoom = config.maxZoom || 18;
+		this.minZoom = config.minZoom || 0;
 	}
 
 	build_url(tile) {
@@ -49,21 +52,25 @@ class RemoteImagery extends Imagery {
 		});
 	}
 
-	get(tile, root_dir) {
+	get_size() {
+		return this.tileSize;
+	}
+
+	get_max_zoom() {
+		return this.maxZoom;
+	}
+
+	get_min_zoom () {
+		return this.minZoom;
+	}
+
+	get(tile) {
 		let imagery = this;
 
 		return new Promise((resolve, reject) => {
-			let url = imagery.build_url(tile),
-				filename = imagery.build_filename(tile, root_dir);
+			let url = imagery.build_url(tile);
 
-			request(url)
-				.on('request', (message) => {
-					console.log('get request');
-
-					message.on('close', () => resolve());
-				})
-				.on('error', (err) => reject(err))
-				.pipe(fs.createWriteStream(filename));
+			resolve(request(url));
 
 		});
 	}

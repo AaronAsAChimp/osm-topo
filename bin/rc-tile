@@ -1,0 +1,62 @@
+#!/usr/bin/env node
+
+/*
+	osm-topo - 3D map generator
+	Copyright (C) 2015  Aaron Spaulding
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License along
+	with this program; if not, write to the Free Software Foundation, Inc.,
+	51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
+
+'use strict';
+
+var https = require('https'),
+	url = require('url'),
+	fs = require('fs'),
+	REMOTE_CONTROL_PORT = 8112,
+	ssl_config = {
+		'key': fs.readFileSync('etc/keys/server.key'),
+		'cert': fs.readFileSync('etc/keys/server.crt')
+	},
+	handlers = {
+		'/load_and_zoom': function (wrapper) {
+			console.log(wrapper.url.query);
+
+			wrapper.response.end('done');
+		}
+	};
+
+class Wrapper {
+	constructor (request, resposne) {
+		this.url = url.parse(request.url, true);
+
+		this.request = request;
+		this.response = resposne;
+	}
+}
+
+https.createServer(ssl_config, function (request, response) {
+	let wrapper = new Wrapper(request, response);
+
+	console.log('Got request');
+
+	if (wrapper.url.pathname in handlers) {
+		handlers[wrapper.url.pathname](wrapper);
+	} else {
+		console.log('No handler found');
+		response.statusCode = 404;
+		response.end('Not found');
+	}
+
+}).listen(REMOTE_CONTROL_PORT);

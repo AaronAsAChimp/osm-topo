@@ -82,7 +82,7 @@ function *projector(geography) {
 						yield coord;
 					}
 				} else {
-					console.warn('Units not understood, skipping');
+					console.warn('Units not understood, skipping, ID: ', geo.id);
 				}
 			} else {
 				console.warn('No tags skipping.');

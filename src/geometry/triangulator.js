@@ -22,11 +22,12 @@ var Point3D = require('./primitives').Point3D,
 	//QuadTree = require('./quad-tree'),
 	BoundingBox2D = require('./primitives').BoundingBox2D;
 
+import chalk from 'chalk';
 import QuadTree from './linear-quad-tree';
 
 // Triangulator
 // ============
-// 
+//
 // Use the Bowyer-Watson algorithm to triangulate the points.
 
 export default
@@ -80,14 +81,6 @@ class Triangulator {
 		this.points.push(point);
 
 		//console.log('Adding point', point.x + ',' + point.y + ', ' + point.z);
-
-		// // The quad tree will execute this function for each bad triangle.
-		// this.quads.find(point, function (circ) {
-		// 	// console.log('Overlapping with ', circ.parent);
-
-		// 	// add it the bad triangle to the list for use later.
-		// 	bad_circles.push(circ);
-		// });
 
 		// console.log('---- bad circles: begin ----');
 		// console.log('Circles found for point: ', point);
@@ -181,11 +174,15 @@ class Triangulator {
 			}
 		}
 
-		console.log('Triangles created ', triangles.length);
+		console.log(' - ' + chalk.cyan(triangles.length) + ' Triangles created');
 
 		//this.quads.render('quad-tree.png');
 
 		return triangles;
+	}
+
+	get_layer () {
+		return this.quads.map((circle) => circle.parent);
 	}
 
 	set_image_path (path) {

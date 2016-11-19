@@ -27,7 +27,7 @@ class OverpassProvider extends Provider {
 
 	// OverpassProvider::get_max_processes
 	// -----------------------------------
-	// 
+	//
 	// The overpass service only allows a maximum of 2 connections.
 
 	static get_max_processes() {
@@ -45,11 +45,11 @@ class OverpassProvider extends Provider {
 
 		var provider = this,
 			overpass_bbox = bbox.to_overpass(),
-			query = '[out:json][timeout:25][bbox:' + bbox.to_overpass() + '];(' + 
+			query = '[out:json][timeout:25][bbox:' + bbox.to_overpass() + '];(' +
 				'node["ele"];' +
 				'way["ele"];' +
 				'way["natural"="coastline"];' +
-				/*'relation["ele"]' + this.bbox.to_overpass() + ';' +*/ 
+				/*'relation["ele"]' + this.bbox.to_overpass() + ';' +*/
 			'); out ' + limit + ' body; >; out skel qt;';
 
 		console.log(query);
@@ -62,6 +62,7 @@ class OverpassProvider extends Provider {
 
 		return new Promise(function (resolve, reject) {
 			var result = '',
+				status = 0,
 				req;
 
 			req = request.post('http://overpass-api.de/api/interpreter', {
@@ -72,10 +73,7 @@ class OverpassProvider extends Provider {
 			});
 
 			req.on('response', function (res) {
-				if (res.statusCode >= 400) {
-					console.log(res.statusCode + ' Error retrieveing data');
-					reject();
-				}
+				status = res.statusCode;
 			});
 
 			req.on('data', function (data) {
@@ -83,18 +81,24 @@ class OverpassProvider extends Provider {
 			});
 
 			req.on('end', function () {
-				var json;
-
 				//console.log(result);
 
-				try {
-					json = JSON.parse(result);
-				} catch (e) {
-					reject(e);
-					return;
-				}
+				if (status >= 400) {
+					console.log(status + ' Error retrieveing data');
 
-				resolve(map(json));
+					reject();
+				} else {
+					let json;
+
+					try {
+						json = JSON.parse(result);
+					} catch (e) {
+						reject(e);
+						return;
+					}
+
+					resolve(map(json));
+				}
 			});
 
 			req.on('error', function (err) {

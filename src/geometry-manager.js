@@ -17,6 +17,8 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
+import chalk from 'chalk';
+
 import error_handler from './error-handler';
 import { Point2D } from './geometry/primitives';
 import Provider from './osm/providers/provider';
@@ -62,8 +64,30 @@ class GeometryManager {
 		return !has_y;
 	}
 
+	summary(total, elapsed, skipped_counts, skipped_reasons) {
+		console.log(' - ' + chalk.cyan(total) + ' Points added at ' + chalk.cyan(Math.floor(total / (elapsed / 1000))) + ' points per second');
+
+		console.log('Some points were skipped.');
+
+		for (let reason in skipped_counts) {
+			if (skipped_counts[reason] > 0) {
+				console.log(' - ' + chalk.cyan(skipped_counts[reason]) + ' ' + skipped_reasons[reason]);
+			}
+		}
+	}
+
 	get_triangles () {
 		let manager = this,
+			skipped_counts = {
+				'max': 0,
+				'dupe': 0,
+				'bounds': 0
+			},
+			skipped_reasons = {
+				'max': 'Skipped remaining points because the maximum of ' + MAX_POINTS + ' points were reached.',
+				'dupe': 'Points skipped because it is a duplicate.',
+				'bounds': 'Points skipped because its outside of the bounding box.'
+			},
 			start = new Date();
 
 		return Promise.all(this.providers)
@@ -79,7 +103,7 @@ class GeometryManager {
 							// check if the point is a duplicate.
 							if (manager.add_dupe(point)) {
 
-								// check if we;ve reached the max
+								// check if we've reached the max
 								if (manager.triangulator.points.length < MAX_POINTS) {
 
 									let projected = point.tile(manager.tile.zoom);
@@ -87,28 +111,30 @@ class GeometryManager {
 
 									manager.triangulator.add(projected);
 
-									if ((manager.triangulator.points.length % LOG_AFTER) === 0) {
+									/*if ((manager.triangulator.points.length % LOG_AFTER) === 0) {
 										let current = new Date(),
 											points = manager.triangulator.points.length;
 
 										console.log('Points: ' + points + ', per second: ' + (LOG_AFTER / (current - start)));
 
 										start = current;
-									}
+									}*/
 
 								} else {
 									// Early exit if we are maxed out.
-									console.log('Skipping remaining points because the maximum of ' + MAX_POINTS + ' points were reached.');
+									skipped_counts.max++;
 									break;
 								}
 							} else {
-								console.log('Skipping point because it is a duplicate.');
+								skipped_counts.dupe++;
 							}
 						} else {
-							console.log('Skipping point because its outside of the bounding box.');
+							skipped_counts.bounds++;
 						}
 					}
 				}
+
+				manager.summary(manager.triangulator.points.length, (new Date()) - start, skipped_counts, skipped_reasons);
 
 				return manager.triangulator;
 			}, error_handler('getting data from geometry providers'))

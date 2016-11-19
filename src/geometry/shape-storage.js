@@ -38,8 +38,43 @@ class ShapeStorage {
 		throw new Error('Not Implemented.');
 	}
 
-	each (funk) {
+	each () {
 		throw new Error('Not Implemented.');
+	}
+
+	map (funk) {
+		let storage = new this.constructor();
+
+		for (let shape of this.each()) {
+			storage.add(funk(shape));
+		}
+
+		return storage;
+	}
+
+	reduce (funk, initial_value) {
+		let shapes = this.each(),
+			value = initial_value;
+
+		if (typeof value === 'undefined') {
+			value = shapes[Symbol.iterator].next();
+		}
+
+		for (let shape of shapes) {
+			value = funk(value, shape);
+		}
+
+		return value;
+	}
+
+	get length () {
+		let length = 0;
+
+		for (let length of this.each()) {
+			length++;
+		}
+
+		return length;
 	}
 }
 
@@ -83,10 +118,10 @@ class SimpleShapeStorage extends ShapeStorage {
 
 	// QuadTree::list
 	// --------------
-	// 
+	//
 	// Return a list of all the shapes that are in the quad tree.
 
-	each (funk) {
+	each () {
 		return this.shapes;
 	}
 }
